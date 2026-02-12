@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5FAN - Five Voices Agentic Network</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2a1f3a 100%);
+            color: #fff;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            padding: 40px 20px;
+        }
+
+        .logo {
+            font-size: 120px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff6b9d 0%, #c06c84 50%, #6c5b7b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            animation: glow 3s ease-in-out infinite;
+            letter-spacing: -5px;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 107, 157, 0.5)); }
+            50% { filter: drop-shadow(0 0 40px rgba(255, 107, 157, 0.8)); }
+        }
+
+        .tagline {
+            font-size: 24px;
+            color: #ff6b9d;
+            margin-bottom: 40px;
+            font-weight: 600;
+        }
+
+        .quote {
+            max-width: 800px;
+            font-size: 18px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 107, 157, 0.2);
+            backdrop-filter: blur(10px);
+            margin-bottom: 60px;
+            font-style: italic;
+        }
+
+        /* Voices Grid */
+        .voices-section {
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 48px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #ff6b9d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 60px;
+        }
+
+        .voices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .voice-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 40px 30px;
+            border: 2px solid rgba(255, 107, 157, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .voice-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 107, 157, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .voice-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 107, 157, 0.6);
+            box-shadow: 0 20px 40px rgba(255, 107, 157, 0.2);
+        }
+
+        .voice-card:hover::before {
+            opacity: 1;
+        }
+
+        .voice-emoji {
+            font-size: 60px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .voice-name {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #ff6b9d;
+        }
+
+        .voice-description {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+
+        .voice-response {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 107, 157, 0.1);
+            border-radius: 10px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.9);
+            font-style: italic;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .voice-card.active .voice-response {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Interactive Demo */
+        .demo-section {
+            padding: 80px 20px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .demo-container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .demo-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 107, 157, 0.3);
+            border-radius: 15px;
+            color: #fff;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .demo-input:focus {
+            outline: none;
+            border-color: #ff6b9d;
+            box-shadow: 0 0 20px rgba(255, 107, 157, 0.3);
+        }
+
+        .demo-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .demo-button {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #ff6b9d 0%, #c06c84 100%);
+            border: none;
+            border-radius: 15px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .demo-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(255, 107, 157, 0.4);
+        }
+
+        .demo-response {
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border-left: 4px solid #ff6b9d;
+            text-align: left;
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+
+        .demo-response.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .response-voice {
+            font-size: 14px;
+            color: #ff6b9d;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .response-text {
+            font-size: 18px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Coming Soon */
+        .coming-soon {
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .coming-soon-box {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 60px 40px;
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.1) 0%, rgba(192, 108, 132, 0.1) 100%);
+            border-radius: 30px;
+            border: 2px solid rgba(255, 107, 157, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .coming-soon-box::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff6b9d, #c06c84, #6c5b7b, #ff6b9d);
+            background-size: 400%;
+            border-radius: 30px;
+            opacity: 0;
+            z-index: -1;
+            animation: gradientMove 3s ease infinite;
+        }
+
+        @keyframes gradientMove {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .coming-soon-title {
+            font-size: 36px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .coming-soon-text {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+        }
+
+        .hi-app-logo {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff6b9d 0%, #fff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 60px 20px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 107, 157, 0.2);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: #ff6b9d;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 107, 157, 0.5);
+        }
+
+        .footer-trac {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: monospace;
+            margin-top: 20px;
+        }
+
+        /* Floating particles */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 107, 157, 0.3);
+            border-radius: 50%;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translate(100vw, -100vh) scale(0); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .logo { font-size: 80px; }
+            .tagline { font-size: 18px; }
+            .quote { font-size: 16px; padding: 30px 20px; }
+            .section-title { font-size: 36px; }
+            .voices-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating particles -->
+    <div id="particles"></div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="logo">5FAN</div>
+            <div class="tagline">Five Voices Agentic Network</div>
+            <div class="quote">
+                "5FAN defines a reinforcement layer for human-AI systems. As autonomous agents increasingly guide decisions in health, productivity, and personal development, sustained human engagement becomes a reliability constraint. Most agents optimize output. Few optimize persistence. 5FAN enables specialized support agents to deliver consistent, non-judgmental reinforcement aligned with long-term user stability. In agentic environments, psychological durability becomes infrastructure."
+            </div>
+        </div>
+    </section>
+
+    <!-- Voices Section -->
+    <section class="voices-section">
+        <div class="container">
+            <h2 class="section-title">Meet the Five Voices</h2>
+            <p class="section-subtitle">394 unique empathetic responses • AI-powered with graceful fallback</p>
+            
+            <div class="voices-grid">
+                <div class="voice-card" data-voice="hear">
+                    <span class="voice-emoji">👂</span>
+                    <div class="voice-name">hear</div>
+                    <div class="voice-description">Empathetic listener that validates feelings and offers reflective support</div>
+                    <div class="voice-response">"I hear you - that sounds really challenging. Your feelings are completely valid."</div>
+                </div>
+
+                <div class="voice-card" data-voice="inspyre">
+                    <span class="voice-emoji">🚀</span>
+                    <div class="voice-name">inspyre</div>
+                    <div class="voice-description">Motivational coach providing encouragement and forward momentum</div>
+                    <div class="voice-response">"You've got this! Every expert was once a beginner. Take the next small step."</div>
+                </div>
+
+                <div class="voice-card" data-voice="flow">
+                    <span class="voice-emoji">🧘</span>
+                    <div class="voice-name">flow</div>
+                    <div class="voice-description">Zen guide promoting calm, presence, and mindful awareness</div>
+                    <div class="voice-response">"Take a breath. This moment is all there is. Everything flows at its own pace."</div>
+                </div>
+
+                <div class="voice-card" data-voice="you">
+                    <span class="voice-emoji">💝</span>
+                    <div class="voice-name">you</div>
+                    <div class="voice-description">Self-love advocate celebrating personal worth and achievements</div>
+                    <div class="voice-response">"You're doing amazing! Celebrating your courage to share and grow."</div>
+                </div>
+
+                <div class="voice-card" data-voice="view">
+                    <span class="voice-emoji">🔮</span>
+                    <div class="voice-name">view</div>
+                    <div class="voice-description">Perspective shifter offering alternative viewpoints and reframing</div>
+                    <div class="voice-response">"What if this challenge is actually an opportunity in disguise?"</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Demo -->
+    <section class="demo-section">
+        <div class="container">
+            <div class="demo-container">
+                <h2 class="section-title">Try It Live</h2>
+                <p class="section-subtitle">Share how you're feeling, get empathetic support</p>
+                
+                <input type="text" 
+                       class="demo-input" 
+                       id="userInput" 
+                       placeholder="I'm feeling...">
+                <button class="demo-button" onclick="generateResponse()">Get Support</button>
+                
+                <div class="demo-response" id="demoResponse">
+                    <div class="response-voice" id="responseVoice"></div>
+                    <div class="response-text" id="responseText"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Coming Soon -->
+    <section class="coming-soon">
+        <div class="container">
+            <div class="coming-soon-box">
+                <h2 class="coming-soon-title">Coming Soon</h2>
+                <p class="coming-soon-text">5FAN integration with the Hi app</p>
+                <div class="hi-app-logo">5FAN × Hi</div>
+                <p class="section-subtitle" style="margin-top: 20px;">Bringing empathetic AI to your daily interactions</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-links">
+                <a href="https://github.com/joeatang/5FAN" class="footer-link" target="_blank">GitHub</a>
+                <a href="https://github.com/trac-network/tracr-intercom-v1" class="footer-link" target="_blank">Built on Intercom</a>
+                <a href="https://www.moltbook.com/post/b6a30c21-c45e-424f-a7e3-b47f8abaf49c" class="footer-link" target="_blank">Competition</a>
+                <a href="https://trac.network" class="footer-link" target="_blank">Trac Network</a>
+            </div>
+            <div class="footer-trac">trac1wtsn8ru2ryknk36rd6glp2tfj0dawnh2gkjrg90gzqvwes65v78qmwjuzq</div>
+            <p style="margin-top: 30px; color: rgba(255,255,255,0.5); font-size: 14px;">Built with 💝 by @joeatang • Competition Submission Feb 2026</p>
+        </div>
+    </footer>
+
+    <script>
+        // Voice card interactions
+        document.querySelectorAll('.voice-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // Remove active from all cards
+                document.querySelectorAll('.voice-card').forEach(c => c.classList.remove('active'));
+                // Add active to clicked card
+                this.classList.add('active');
+            });
+        });
+
+        // Demo responses
+        const responses = {
+            hear: [
+                "I hear you - that sounds really challenging. Your feelings are completely valid.",
+                "What you're going through matters. I'm here to listen without judgment.",
+                "That takes courage to share. How can I support you right now?"
+            ],
+            inspyre: [
+                "You've got this! Every expert was once a beginner just like you.",
+                "This is your moment to shine. What's one small step you can take?",
+                "Your potential is limitless. Let's turn this into momentum!"
+            ],
+            flow: [
+                "Take a breath. This moment is all there is. Everything flows at its own pace.",
+                "In stillness, we find clarity. What if you let this unfold naturally?",
+                "Peace exists in the present. Feel the calm between thoughts."
+            ],
+            you: [
+                "You're doing amazing! Celebrating your courage to show up and grow.",
+                "Look how far you've come! Your resilience is inspiring.",
+                "You deserve all the good things coming your way. Keep shining!"
+            ],
+            view: [
+                "What if this challenge is actually an opportunity in disguise?",
+                "From a different angle, this might be exactly what you needed.",
+                "Consider this: every obstacle reveals a new path forward."
+            ]
+        };
+
+        function generateResponse() {
+            const input = document.getElementById('userInput').value;
+            if (!input.trim()) return;
+
+            const voices = ['hear', 'inspyre', 'flow', 'you', 'view'];
+            const randomVoice = voices[Math.floor(Math.random() * voices.length)];
+            const voiceResponses = responses[randomVoice];
+            const randomResponse = voiceResponses[Math.floor(Math.random() * voiceResponses.length)];
+
+            const responseDiv = document.getElementById('demoResponse');
+            const voiceSpan = document.getElementById('responseVoice');
+            const textDiv = document.getElementById('responseText');
+
+            voiceSpan.textContent = `${randomVoice} responds:`;
+            textDiv.textContent = randomResponse;
+
+            responseDiv.classList.remove('show');
+            setTimeout(() => {
+                responseDiv.classList.add('show');
+            }, 50);
+        }
+
+        // Enter key support
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateResponse();
+            }
+        });
+
+        // Generate floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.top = Math.random() * 100 + 'vh';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        createParticles();
+    </script>
+</body>
+</html>
