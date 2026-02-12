@@ -397,7 +397,13 @@
         const voices = {
             hear: {
                 emoji: '👂',
-                responses: [
+                positive: [
+                    "I hear that - it's powerful when we recognize what sustains us.",
+                    "That's a beautiful awareness to hold onto. What else helps you stay grounded?",
+                    "I'm with you on that. Mindful appreciation can be so centering.",
+                    "Thank you for sharing that reminder. It resonates deeply."
+                ],
+                challenging: [
                     "I hear you - that sounds really challenging. Your feelings are completely valid.",
                     "What you're going through matters. I'm here to listen without judgment.",
                     "That takes courage to share. Thank you for being vulnerable.",
@@ -406,34 +412,58 @@
             },
             inspyre: {
                 emoji: '🚀',
-                responses: [
+                positive: [
+                    "Yes! That mindset is exactly what propels us forward. Keep that energy!",
+                    "Love seeing you recognize your own resilience. You're building something powerful.",
+                    "That's the kind of insight that creates real momentum. What's next?",
+                    "You're already on the path. Trust that awareness you just shared."
+                ],
+                challenging: [
                     "You've got this! Every expert was once a beginner just like you.",
-                    "This is your moment to shine. What's one small step you can take?",
+                    "This is your moment to grow. What's one small step you can take?",
                     "Your potential is limitless. Let's turn this into momentum!",
                     "I believe in you. You're stronger than you realize."
                 ]
             },
             flow: {
                 emoji: '🧘',
-                responses: [
+                positive: [
+                    "Beautiful. That's the flow - noticing what nourishes us in real-time.",
+                    "Peace exists in the present. You're right there with it.",
+                    "That awareness is the practice itself. Keep returning to it.",
+                    "Yes. Simple truths like this anchor us when everything else moves."
+                ],
+                challenging: [
                     "Take a breath. This moment is all there is. Everything flows at its own pace.",
                     "In stillness, we find clarity. What if you let this unfold naturally?",
-                    "Peace exists in the present. Feel the calm between thoughts.",
-                    "The river doesn't rush. Trust the current of your journey."
+                    "The river doesn't rush. Trust the current of your journey.",
+                    "What you're experiencing is temporary. The flow continues."
                 ]
             },
             you: {
                 emoji: '💝',
-                responses: [
+                positive: [
+                    "Yes! Celebrating that self-awareness and gratitude. You deserve all of it.",
+                    "That's self-love in action - recognizing what matters. Keep shining!",
+                    "You're honoring yourself by noticing that. Beautiful work.",
+                    "Love this energy! You're exactly where you need to be."
+                ],
+                challenging: [
                     "You're doing amazing! Celebrating your courage to show up and grow.",
-                    "Look how far you've come! Your resilience is inspiring.",
-                    "You deserve all the good things coming your way. Keep shining!",
+                    "Look how far you've come already. Your resilience is inspiring.",
+                    "You deserve compassion, especially from yourself. Be gentle.",
                     "You are enough, exactly as you are. Never forget that."
                 ]
             },
             view: {
                 emoji: '🔮',
-                responses: [
+                positive: [
+                    "Powerful reframe. What if more moments could be seen through that lens?",
+                    "That perspective shift - from scarcity to abundance - changes everything.",
+                    "You just proved how perspective shapes reality. Imagine applying that daily.",
+                    "Exactly. Sometimes the simplest truths hold the deepest wisdom."
+                ],
+                challenging: [
                     "What if this challenge is actually an opportunity in disguise?",
                     "From a different angle, this might be exactly what you needed.",
                     "Consider this: every obstacle reveals a new path forward.",
@@ -444,6 +474,20 @@
 
         const chatArea = document.getElementById('chatArea');
         const userInput = document.getElementById('userInput');
+
+        // Simple sentiment detection
+        function detectSentiment(text) {
+            const positive = ['grateful', 'thank', 'help', 'better', 'good', 'love', 'appreciate', 'happy', 'joy', 'alive', 'healthy', 'blessed', 'amazing'];
+            const challenging = ['overwhelm', 'stress', 'anxious', 'worry', 'scared', 'difficult', 'hard', 'struggle', 'fail', 'tired', 'exhausted', 'confused', 'lost'];
+            
+            const lowerText = text.toLowerCase();
+            const hasPositive = positive.some(word => lowerText.includes(word));
+            const hasChallenging = challenging.some(word => lowerText.includes(word));
+            
+            if (hasChallenging) return 'challenging';
+            if (hasPositive) return 'positive';
+            return 'challenging'; // default to empathetic
+        }
 
         function addMessage(text, isUser, voiceName = null) {
             const messageDiv = document.createElement('div');
@@ -496,6 +540,9 @@
             addMessage(text, true);
             userInput.value = '';
             
+            // Detect sentiment for contextually appropriate responses
+            const sentiment = detectSentiment(text);
+            
             // Simulate 3-6 second delay before responses (like real 5FAN)
             showTypingIndicator();
             await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 3000));
@@ -516,7 +563,8 @@
             // Voices respond one after another
             for (const voiceName of respondingVoices) {
                 const voice = voices[voiceName];
-                const response = voice.responses[Math.floor(Math.random() * voice.responses.length)];
+                const responseSet = voice[sentiment];
+                const response = responseSet[Math.floor(Math.random() * responseSet.length)];
                 
                 showTypingIndicator();
                 await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
@@ -531,8 +579,9 @@
         setTimeout(() => {
             const examples = [
                 "I'm feeling overwhelmed with everything going on...",
+                "I'm grateful for the small wins today",
                 "I'm not sure if I'm making the right decisions",
-                "Sometimes I feel like I'm not doing enough"
+                "Remembering what I'm blessed with helps me stay centered"
             ];
             const example = examples[Math.floor(Math.random() * examples.length)];
             userInput.placeholder = `Try: "${example}"`;
