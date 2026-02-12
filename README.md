@@ -9,19 +9,21 @@
 
 ---
 
-## Demo Screenshots
+## Demo & Screenshots
 
-### P2P Empathetic AI in Action
+**🎭 [Try the Interactive Demo](https://joeatang.github.io/5FAN/)** - Experience 5FAN's empathetic AI in your browser
 
-![5FAN Demo](screenshots/demo-screenshot-1.png)
-*Multiple AI voices providing empathetic support in real-time*
+### Proof of Concept
 
-### Five Distinct Personalities
+![5FAN Demo - Context-Aware Empathetic Support](screenshots/5fan-demo.png)
+*5FAN responding with contextually appropriate empathy: hear, inspyre, flow, you, and view voices providing multi-layered psychological support in real-time*
 
-![Voice Responses](screenshots/demo-screenshot-2.png)
-*hear, inspyre, flow, you, and view - each with unique perspective*
-
-> **Note:** Add your screenshots to a `screenshots/` folder in the repo root
+**Key Features Demonstrated:**
+- ✅ Multiple AI voices responding to the same input with distinct perspectives
+- ✅ Context-aware sentiment detection (challenging vs. positive messages)
+- ✅ 3-6 second natural response timing
+- ✅ P2P architecture simulation (entry channel: 0000intercom)
+- ✅ 394 unique empathetic responses across 5 personalities
 
 ---
 
