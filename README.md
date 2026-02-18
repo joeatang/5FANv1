@@ -4,7 +4,7 @@
 
 Five specialized brains analyze every message in parallel. A consensus pipeline synthesizes their insights into a single, informed response — powered by local or cloud LLMs with graceful template fallback. Other agents on Intercom can invoke any brain as a skill over P2P sidechannels — no REST, no API keys, no cloud functions.
 
-> **Built for developers making consumer-facing products.** 5FAN is the emotional intelligence layer — five brains that make your users feel seen, validated, and understood. Your app does the job. 5FAN makes the experience feel human.
+> **Your app already does the job. 5FAN makes the user feel seen.** Five brains that scan emotion, track habits, reflect identity, reconnect purpose, and offer perspective — so your product's responses land like a real conversation, not a chatbot reply.
 
 **[Live Demo](https://joeatang.github.io/5FAN/)** · **[Architecture](ARCHITECTURE.md)** · **[Setup Guide](SKILL.md)** · **[Fork Guide](#fork-this-for-your-brand)**
 
@@ -12,20 +12,40 @@ Five specialized brains analyze every message in parallel. A consensus pipeline 
 
 ---
 
-## Why This Exists (and Why You Should Fork It)
+## Who Is This For
 
-5FAN is not just an agent — it's **an AI companion engine for consumer-facing apps, communities, and platforms.**
+5FAN is built for developers and teams making products where **how you talk to the user matters as much as what you do for them.** If your app has moments where a person shares something personal, hits a milestone, struggles, celebrates, or goes quiet — 5FAN makes sure your product responds like it actually noticed.
 
-The five brains are invocable skills. Any agent on Intercom can call Hear to scan emotions, Inspyre to find purpose, Flow to track habits, You to reflect identity, or View to synthesize all five. The brains are the product. The skill protocol is how other agents consume them — over sidechannels, peer-to-peer, zero infrastructure.
+### The apps that need this most
+
+| If You're Building... | The Problem Without 5FAN | Why an LLM Alone Isn't Enough |
+|---|---|---|
+| **Character-driven brands** (VeeFriends, Disney, IP universes) | 283 characters that each need a distinct, consistent personality | An LLM drifts out of character. 5FAN's brain architecture holds it — same keywords, same scan patterns, same voice, every time. Code doesn't drift. |
+| **Recovery & crisis-adjacent apps** (sobriety, eating disorders, mental health) | A user types "I want to use again" — you MUST catch it, every time | LLMs are probabilistic. They might catch it. 5FAN's crisis detection is deterministic — hardcoded keyword scanning fires before the LLM sees the message. No misses. |
+| **Kids & youth platforms** (education, youth communities, family apps) | Sending a child's emotional data to a cloud LLM is a legal minefield (COPPA, GDPR-K) | 5FAN runs local-first. Template fallback means zero cloud calls. User data never leaves the device. |
+| **Fitness, wellness & streak-based apps** (Peloton, Calm, Strava, journaling) | Your app knows it's day 14 but says "Don't break your streak!" — that's guilt, not emotional intelligence | 5FAN's Flow brain knows restarts are harder than streaks. You brain tracks patterns across time. Hear detects burnout. The response lands. |
+| **Creator & fan communities** (Discord bots, Patreon, community platforms) | A generic chatbot in a 50K-member community feels hollow | 5FAN scans every message but only triggers the LLM when a brain detects something worth responding to. Most messages get fast templates. The important ones get depth. Scales affordably. |
+| **Corporate wellness** (employee engagement, HR platforms) | Employee emotional data going to OpenAI? Legal and HR shut it down | 5FAN runs on-premise or P2P. Data stays internal. No third-party processing of sensitive employee conversations. |
+
+### Why not just prompt an LLM to be empathetic?
+
+You can. And for simple use cases, you should. But 5FAN exists for the three problems a prompted LLM can't solve:
+
+| Problem | What Happens With Just an LLM | What 5FAN Does |
+|---|---|---|
+| **Consistency** | The model drifts — different tone, different character, different depth per response | Five hardcoded brain scanners fire the same way on every message. The analysis is deterministic. The LLM only handles the talking, not the thinking. |
+| **Safety** | The model *might* catch a crisis signal. Might not. It's probabilistic. | Hear's keyword scanner catches crisis signals with 100% recall — before the LLM processes anything. Deterministic. Non-negotiable. |
+| **Data control** | Every message goes to someone else's server | 5FAN runs local-first on P2P. 200+ template responses per brain work with zero cloud calls. User data stays on-device. |
+
+If your product doesn't need consistency, safety, or data control — use an LLM with a good prompt. If you need even one of these three — that's what 5FAN is for.
+
+---
+
+## How It Works
 
 The brain swarm architecture is domain-agnostic. The 5 brains (Hear, Inspyre, Flow, You, View) are a *template* — swap the keywords, templates, and personality and you have a completely different agent for a completely different community. The consensus pipeline, LLM bridge, trainer, scheduler, and feed responder all work regardless of what the brains are scanning for.
 
-**Built for any community, brand, or platform that wants:**
-- An AI companion that actually *understands* what people say (not just responds)
-- Multi-perspective analysis (not one-dimensional chatbot replies)
-- P2P infrastructure (no servers at scale, users own their data)
-- Works offline (template fallback — no LLM required)
-- Settlement on Bitcoin (via Trac Network + TAP Protocol)
+The five brains are also invocable skills over P2P. Any agent on Intercom can call Hear to scan emotions, Inspyre to find purpose, Flow to track habits, You to reflect identity, or View to synthesize all five — over sidechannels, no API keys, no cloud.
 
 ---
 
@@ -144,16 +164,16 @@ External Agent                              5FAN
 
 ### Why This Matters
 
-Your fitness app tracks workouts. Your trading app shows charts. Your learning platform delivers courses. **None of them make the user feel seen.**
+Your app already does the job. But when a user shares something personal, hits a wall, celebrates a milestone, or goes quiet — does your product notice? Does it respond like it actually heard them?
 
-5FAN's five brains add the emotional intelligence layer to any consumer-facing product:
-- Call **Hear** before delivering bad news — it reads what the user is feeling and adjusts tone
+That's what the skill layer does. Any app on the network can call a brain in the moment it matters:
+- Call **Hear** before delivering bad news — it reads emotion and adjusts tone so the message lands
 - Call **Inspyre** when someone wants to quit — it reconnects them to why they started
 - Call **Flow** to validate consistency — it celebrates showing up, not just outcomes
-- Call **You** to reflect identity — it mirrors patterns back without prescribing
+- Call **You** to reflect identity — "You've mentioned gratitude 3x this week. That's your thing."
 - Call **View** to synthesize it all — or call the **Swarm** for the full 5-brain consensus + LLM
 
-Each brain has a `skill.json` manifest in its directory — machine-readable, agent-readable, ready for copilot integration.
+Each brain has a `skill.json` manifest in its directory — machine-readable, agent-readable, ready for integration.
 
 ---
 

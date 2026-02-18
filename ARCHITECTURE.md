@@ -2,7 +2,7 @@
 
 ## Overview
 
-5FAN (Five Brains Agentic Network) is a multi-brain AI agent built on [Trac Network's Intercom](https://github.com/Trac-Systems/intercom). Five specialized brains analyze every message in parallel, then a consensus pipeline synthesizes their insights into a single, informed response. Every brain is also an invocable skill — any agent on Intercom can call them over P2P sidechannels.
+5FAN (Five Brains Agentic Network) is a multi-brain AI agent built on [Trac Network's Intercom](https://github.com/Trac-Systems/intercom) for apps where how you talk to the user matters — character-driven brands, wellness & recovery products, kids platforms, and communities. Five specialized brains analyze every message in parallel, then a consensus pipeline synthesizes their insights into a single response that makes the user feel seen. Every brain is also an invocable skill — any agent on Intercom can call them over P2P sidechannels.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

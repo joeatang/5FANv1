@@ -1,6 +1,6 @@
 ---
 name: 5FAN
-description: Five Brains Agentic Network — A multi-brain AI agent built on Trac Network's Intercom. Five specialized brains analyze messages in parallel, curate consensus, and respond via LLM or templates. Every brain is an invocable skill — any agent on Intercom can call them over P2P sidechannels.
+description: Five Brains Agentic Network — emotional intelligence for apps where how you talk to the user matters. Five brains scan emotion, track habits, reflect identity, reconnect purpose, and offer perspective. Built for character-driven brands, wellness apps, recovery platforms, kids products, and communities. Runs local-first on P2P — no cloud dependency, deterministic crisis detection, user data stays on-device.
 trac_address: trac1wtsn8ru2ryknk36rd6glp2tfj0dawnh2gkjrg90gzqvwes65v78qmwjuzq
 ---
 
@@ -127,7 +127,7 @@ All five brains scan the message. View curates consensus. LLM (or template) gene
 
 Every brain is an invocable skill on Intercom. Any agent on the network can invoke a single brain or the full 5-brain swarm over P2P sidechannels — no REST, no API keys, no cloud functions. Just Intercom.
 
-> **Built for developers making consumer-facing products.** 5FAN's five brains add emotional intelligence to any app, platform, or community — so users feel seen, not just served.
+> **Your app already does the job. 5FAN makes the user feel seen.** Built for character-driven brands, wellness apps, recovery platforms, kids products, and communities — anywhere a response needs to land like someone actually listened.
 
 ### Channels
 
