@@ -2,7 +2,7 @@
 
 ## Overview
 
-5FAN (Five Brains Agentic Network) is a multi-brain AI agent built on [Trac Network's Intercom](https://github.com/Trac-Systems/intercom). Five specialized brains analyze every message in parallel, then a consensus pipeline synthesizes their insights into a single, informed response.
+5FAN (Five Brains Agentic Network) is a multi-brain AI agent built on [Trac Network's Intercom](https://github.com/Trac-Systems/intercom). Five specialized brains analyze every message in parallel, then a consensus pipeline synthesizes their insights into a single, informed response. Every brain is also an invocable skill — any agent on Intercom can call them over P2P sidechannels.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -14,27 +14,33 @@
 │  │  (find)   │   │  (sync)   │   │ (message) │               │
 │  └──────────┘   └──────────┘   └──────────┘               │
 │                                    │                         │
-│                            ┌───────┴────────┐               │
-│                            │  0000intercom   │               │
-│                            │  (entry point)  │               │
-│                            └───────┬────────┘               │
-└────────────────────────────────────┼────────────────────────┘
-                                     │
-                                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   INTERCOM-SWARM.JS                         │
-│                  (Message Router)                            │
-│                                                             │
-│  incoming message → filter → route → response → broadcast   │
-│                                                             │
-│  Routes:                                                    │
-│    • Feed → Brain Swarm → LLM/Template → broadcast          │
-│    • DM → Trainer API → 1:1 response                       │
-│    • Command → Trainer command handler                       │
-│    • Onboarding → User profile questionnaire                │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-                          ▼
+│               ┌────────────────────┼────────────────┐       │
+│               │                    │                │       │
+│        ┌──────┴───────┐    ┌──────┴────────┐  ┌────┴─────┐│
+│        │ 0000intercom │    │ 5fan-skill-*  │  │5fan-skills││
+│        │ (entry point)│    │ (brain skills)│  │(discovery)││
+│        └──────┬───────┘    └──────┬────────┘  └──────────┘│
+└───────────────┼───────────────────┼─────────────────────────┘
+                │                   │
+                ▼                   ▼
+┌───────────────────────┐  ┌───────────────────────────────────┐
+│   INTERCOM-SWARM.JS   │  │         SKILL-SERVER.JS           │
+│   (Message Router)    │  │     (Skill Invocation Layer)      │
+│                       │  │                                   │
+│ incoming → filter →   │  │ skill:call → brain scan/fulfill → │
+│ route → response →    │  │ skill:result back to caller       │
+│ broadcast             │  │                                   │
+│                       │  │ Channels:                         │
+│ Routes:               │  │   5fan-skill-hear                 │
+│  • Feed → Swarm       │  │   5fan-skill-inspyre              │
+│  • DM → Trainer       │  │   5fan-skill-flow                 │
+│  • Command → Handler  │  │   5fan-skill-you                  │
+│  • Onboard → Profile  │  │   5fan-skill-view                 │
+│                       │  │   5fan-skill-swarm (all 5 + LLM)  │
+└───────────┬───────────┘  └───────────────┬───────────────────┘
+            │                              │
+            └──────────┬───────────────────┘
+                       ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    BRAIN SWARM ENGINE                        │
 │                   (brain-swarm.js)                           │
@@ -144,15 +150,18 @@ User Message
 │   ├── hear/
 │   │   ├── index.js                 # shouldRespond() + handleMessage()
 │   │   ├── functions.js             # scan(), fulfill(), log(), sendTo()
-│   │   └── roleConfig.js            # Title, triggers, templates
+│   │   ├── roleConfig.js            # Title, triggers, templates
+│   │   └── skill.json               # Agent-readable skill manifest
 │   ├── inspyre/                     # Same structure
 │   ├── flow/                        # Same structure
 │   ├── you/                         # Same structure
 │   └── view/                        # Same + curateConsensus()
+│       └── skill.json
 │
 ├── server/                          # Server-side engine
 │   ├── brain-swarm.js               # Parallel scan + consensus pipeline
 │   ├── lm-bridge.js                 # Multi-provider LLM (auto-fallback)
+│   ├── skill-server.js              # Skill invocation listener (P2P)
 │   ├── feed-responder.js            # Auto-reply to community posts
 │   ├── proactive-scheduler.js       # Scheduled community posts
 │   ├── trainer-api.js               # 1:1 conversation manager
@@ -161,6 +170,7 @@ User Message
 ├── contract/                        # Intercom contract (from Trac)
 ├── features/                        # Intercom features (sidechannels, SC-Bridge)
 │
+├── skill-protocol.js                # Skill message types, channels, registry
 ├── config.js                        # Master config + feature flags
 ├── app-context.js                   # System prompt identity (customize this)
 ├── user-profile.js                  # Onboarding questionnaire + profiles
@@ -173,7 +183,7 @@ User Message
 ├── index.html                       # GitHub Pages demo
 ├── ARCHITECTURE.md                  # This file
 ├── README.md                        # Project documentation
-├── SKILL.md                         # Setup & troubleshooting
+├── SKILL.md                         # Setup, skill protocol, troubleshooting
 ├── package.json                     # v2.0.0
 └── LICENSE.md                       # MIT
 ```
@@ -205,6 +215,36 @@ Scheduler tick → proactive-scheduler.generatePost()
 User content post → feed-responder.respondToFeed()
                   → brain-swarm.analyze() → lm-bridge.generate()
                   → rate-limited response
+```
+
+### Skill Invocation (Single Brain)
+```
+External agent → joins "5fan-skill-hear" → sends skill:call
+skill-server.js → hearScan() + hearFulfill()
+              → skill:result { signal, category, emotions, response }
+              → sent back on same channel
+```
+
+### Skill Invocation (Full Swarm)
+```
+External agent → joins "5fan-skill-swarm" → sends skill:call
+skill-server.js → all 5 brains scan → View.curateConsensus()
+              → brain-swarm.analyzeAndRespond() → lm-bridge.generate()
+              → skill:result { dominant, consensus, response }
+```
+
+### Skill Chain
+```
+External agent → sends skill:chain { chain: ['hear', 'inspyre', 'view'] }
+skill-server.js → hear.scan() → inspyre.scan() → view.scan()
+              → View synthesizes chain → skill:chain-result
+```
+
+### Skill Discovery
+```
+5FAN → every 5 min → broadcasts skill:manifest on "5fan-skills"
+External agent → joins "5fan-skills" → receives manifest
+External agent → sends skill:describe on any skill channel → gets manifest
 ```
 
 ## LLM Provider Chain

@@ -2,7 +2,9 @@
 
 **A multi-brain AI agent built on [Trac Network's Intercom](https://github.com/Trac-Systems/intercom).**
 
-Five specialized brains analyze every message in parallel. A consensus pipeline synthesizes their insights into a single, informed response — powered by local or cloud LLMs with graceful template fallback.
+Five specialized brains analyze every message in parallel. A consensus pipeline synthesizes their insights into a single, informed response — powered by local or cloud LLMs with graceful template fallback. Other agents on Intercom can invoke any brain as a skill over P2P sidechannels — no REST, no API keys, no cloud functions.
+
+> **APIs encode functions. Skills encode judgment.** 5FAN encodes emotional intelligence — the judgment layer every human-facing agent needs but nobody wants to build. Your agent handles the domain. 5FAN handles the human.
 
 **[Live Demo](https://joeatang.github.io/5FAN/)** · **[Architecture](ARCHITECTURE.md)** · **[Setup Guide](SKILL.md)** · **[Fork Guide](#fork-this-for-your-brand)**
 
@@ -13,6 +15,8 @@ Five specialized brains analyze every message in parallel. A consensus pipeline 
 ## Why This Exists (and Why You Should Fork It)
 
 5FAN is not just an agent — it's **infrastructure for AI-powered community engagement on P2P networks.**
+
+The five brains are invocable skills. Any agent on Intercom can call Hear to scan emotions, Inspyre to find purpose, Flow to track habits, You to reflect identity, or View to synthesize all five. The brains are the product. The skill protocol is how other agents consume them — over sidechannels, peer-to-peer, zero infrastructure.
 
 The brain swarm architecture is domain-agnostic. The 5 brains (Hear, Inspyre, Flow, You, View) are a *template* — swap the keywords, templates, and personality and you have a completely different agent for a completely different community. The consensus pipeline, LLM bridge, trainer, scheduler, and feed responder all work regardless of what the brains are scanning for.
 
@@ -82,6 +86,74 @@ User message
                                ▼
                         Final response
 ```
+
+---
+
+## Skill Layer — Five Brains as Infrastructure
+
+Every brain is an invocable skill on Intercom. Any peer on the network can call a single brain or the full swarm — no REST, no API keys, no cloud. Just P2P sidechannels.
+
+### How It Works
+
+```
+External Agent                              5FAN
+     │                                        │
+     ├─ join "5fan-skill-hear" ────────────────┤
+     │                                        │
+     ├─ skill:call { text: "I feel lost" } ───▶│ Hear.scan() + Hear.fulfill()
+     │                                        │
+     │◀── skill:result { signal: 0.8,         │
+     │     category: "pain",                  │
+     │     response: "That's real. I hear you."│
+     │     } ─────────────────────────────────┤
+     │                                        │
+     ├─ join "5fan-skill-swarm" ──────────────┤
+     │                                        │
+     ├─ skill:call { text: "Should I quit?" }─▶│ All 5 brains → View curates → LLM
+     │                                        │
+     │◀── skill:result { dominant: "inspyre", │
+     │     signal: 0.9,                       │
+     │     response: "Something in you refuses│
+     │     to quit..." }                      │
+     └────────────────────────────────────────┘
+```
+
+### Channels
+
+| Channel | Purpose |
+|---------|---------|
+| `5fan-skills` | Discovery — 5FAN broadcasts its skill manifest here |
+| `5fan-skill-hear` | Invoke Hear brain (emotion scan) |
+| `5fan-skill-inspyre` | Invoke Inspyre brain (values alignment) |
+| `5fan-skill-flow` | Invoke Flow brain (habit tracking) |
+| `5fan-skill-you` | Invoke You brain (identity reflection) |
+| `5fan-skill-view` | Invoke View brain (perspective synthesis) |
+| `5fan-skill-swarm` | Invoke all 5 brains + View consensus + LLM |
+
+### Message Types
+
+| Type | Direction | Purpose |
+|------|-----------|---------|
+| `skill:call` | Agent → 5FAN | Invoke a brain skill |
+| `skill:result` | 5FAN → Agent | Brain scan result + response |
+| `skill:error` | 5FAN → Agent | Invocation error |
+| `skill:chain` | Agent → 5FAN | Chain multiple brains in sequence |
+| `skill:chain-result` | 5FAN → Agent | Chained results with synthesis |
+| `skill:manifest` | 5FAN → Discovery | Available skills broadcast |
+| `skill:describe` | Agent → 5FAN | Request manifest on a skill channel |
+
+### Why This Matters
+
+Your trading agent knows markets. Your fitness agent knows workouts. Your education agent knows curriculum. **None of them know how to handle the human.**
+
+5FAN's five brains are the emotional intelligence layer:
+- Call **Hear** before delivering bad news — it tells you what the user is feeling
+- Call **Inspyre** when someone wants to quit — it reconnects them to their purpose
+- Call **Flow** to validate consistency — it celebrates effort, not outcomes
+- Call **You** to reflect identity — it mirrors patterns without prescribing
+- Call **View** to synthesize it all — or call the **Swarm** for the full 5-brain consensus + LLM
+
+Each brain has a `skill.json` manifest in its directory — machine-readable, agent-readable, ready for copilot integration.
 
 ---
 
@@ -228,17 +300,24 @@ When using Express routes (`server/routes.js`):
 ├── brains/
 │   ├── 5fan.js              # Shared config, constants, helpers
 │   ├── hear/                # Emotional scanner
+│   │   └── skill.json       # Agent-readable skill manifest
 │   ├── inspyre/             # Values alignment
+│   │   └── skill.json
 │   ├── flow/                # Habit guardian
+│   │   └── skill.json
 │   ├── you/                 # Data analyst / profiler
+│   │   └── skill.json
 │   └── view/                # Curator + curateConsensus()
+│       └── skill.json
 ├── server/
 │   ├── brain-swarm.js       # Parallel scan + consensus engine
 │   ├── lm-bridge.js         # Multi-provider LLM (auto-fallback)
+│   ├── skill-server.js      # Skill invocation listener (P2P)
 │   ├── feed-responder.js    # Community feed auto-reply
 │   ├── proactive-scheduler.js
 │   ├── trainer-api.js       # 1:1 conversation manager
 │   └── routes.js            # Express REST API
+├── skill-protocol.js        # Skill message types + channel naming
 ├── config.js                # Master config + feature flags
 ├── app-context.js           # System prompt identity
 ├── user-profile.js          # Onboarding + profile persistence
@@ -280,9 +359,11 @@ Each brain directory contains three files:
 |---|---|
 | `app-context.js` — AI personality & voice | Consensus pipeline (parallel scan → curate → respond) |
 | `brains/*/roleConfig.js` — keywords & templates | LLM bridge (local → cloud → template fallback) |
-| `config.js` — feature flags & timezone | Trainer system (open + guided exercises) |
-| Brain names (Hear→Recovery, etc.) | Proactive scheduler (timezone-aware) |
-| Template response text | Feed auto-responder (rate-limited) |
+| `config.js` — feature flags & timezone | Skill layer (P2P invocation over sidechannels) |
+| Brain names (Hear→Recovery, etc.) | Trainer system (open + guided exercises) |
+| Template response text | Proactive scheduler (timezone-aware) |
+| `brains/*/skill.json` — skill manifests | Skill protocol (message types + channel naming) |
+| | Feed auto-responder (rate-limited) |
 | | User profiling (word-frequency + onboarding) |
 | | REST API (`/v1/5fan/*`) |
 | | P2P routing (Intercom sidechannels) |
@@ -306,9 +387,12 @@ npm install
 #    You: swap identity/data markers
 #    View: swap synthesis templates
 
-# 4. Edit config.js — your timezone, LLM provider, feature flags
+# 4. Edit brains/*/skill.json — update skill manifests for your brains
+#    Change "encodes", "domain", "tagline", "whenToUse" for each brain
 
-# 5. Run it
+# 5. Edit config.js — your timezone, LLM provider, feature flags
+
+# 6. Run it
 pear run . --peer-store-name admin --msb-store-name admin_msb \
   --dht-bootstrap "node1.hyperdht.org:49737,node2.hyperdht.org:49737"
 ```
@@ -322,8 +406,10 @@ Need a brain that doesn't exist? Add one:
 1. `mkdir brains/mybrain` — create the directory
 2. Copy `roleConfig.js`, `functions.js`, `index.js` from any existing brain
 3. Change the scan keywords, templates, and personality
-4. Register in `brains/5fan.js` → add to `BRAINS` array
-5. Import in `server/brain-swarm.js` → add to scan array
+4. Create a `skill.json` manifest (copy from any brain, update metadata)
+5. Register in `brains/5fan.js` → add to `BRAINS` array
+6. Register in `skill-protocol.js` → add to `SKILL_REGISTRY`
+7. Import in `server/brain-swarm.js` → add to scan array
 
 View's `curateConsensus()` automatically incorporates the new brain's signals — no other changes needed.
 

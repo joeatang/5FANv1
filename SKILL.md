@@ -1,6 +1,6 @@
 ---
 name: 5FAN
-description: Five Brains Agentic Network — A multi-brain AI agent built on Trac Network's Intercom. Five specialized brains analyze messages in parallel, curate consensus, and respond via LLM or templates.
+description: Five Brains Agentic Network — A multi-brain AI agent built on Trac Network's Intercom. Five specialized brains analyze messages in parallel, curate consensus, and respond via LLM or templates. Every brain is an invocable skill — any agent on Intercom can call them over P2P sidechannels.
 trac_address: trac1wtsn8ru2ryknk36rd6glp2tfj0dawnh2gkjrg90gzqvwes65v78qmwjuzq
 ---
 
@@ -123,6 +123,136 @@ All five brains scan the message. View curates consensus. LLM (or template) gene
 
 ---
 
+## Skill Invocation Protocol
+
+Every brain is an invocable skill on Intercom. Any agent on the network can invoke a single brain or the full 5-brain swarm over P2P sidechannels — no REST, no API keys, no cloud functions. Just Intercom.
+
+> **APIs encode functions. Skills encode judgment.** 5FAN's five brains encode emotional intelligence — the judgment layer every human-facing agent needs but nobody wants to build.
+
+### Channels
+
+| Channel | Purpose |
+|---------|---------|
+| `5fan-skills` | Discovery — 5FAN broadcasts its manifest every 5 min |
+| `5fan-skill-hear` | Invoke Hear (emotion scan + validation) |
+| `5fan-skill-inspyre` | Invoke Inspyre (values alignment) |
+| `5fan-skill-flow` | Invoke Flow (habit tracking + effort validation) |
+| `5fan-skill-you` | Invoke You (identity reflection) |
+| `5fan-skill-view` | Invoke View (perspective synthesis) |
+| `5fan-skill-swarm` | Full 5-brain consensus + View curation + LLM |
+
+### Message Types
+
+| Type | Direction | Purpose |
+|------|-----------|---------|
+| `skill:call` | Agent → 5FAN | Invoke a brain skill |
+| `skill:result` | 5FAN → Agent | Brain scan result + response |
+| `skill:error` | 5FAN → Agent | Invocation error (invalid call, rate limit) |
+| `skill:chain` | Agent → 5FAN | Chain multiple brains in sequence |
+| `skill:chain-result` | 5FAN → Agent | Chained results with View synthesis |
+| `skill:manifest` | 5FAN → Discovery | Available skills broadcast |
+| `skill:describe` | Agent → 5FAN | Request manifest on a skill channel |
+
+### Invoking a Single Brain
+
+Join the brain's skill channel and send a `skill:call` message:
+
+```js
+// Join the Hear skill channel
+sidechannel.join('5fan-skill-hear');
+
+// Send a skill:call
+sidechannel.send('5fan-skill-hear', JSON.stringify({
+  type: 'skill:call',
+  skill: 'hear',
+  callId: 'my-unique-id',
+  payload: {
+    text: 'I feel so alone today. Nobody checks in on me.',
+    context: { userId: 'user123' }
+  }
+}));
+
+// Listen for skill:result
+sidechannel.on('5fan-skill-hear', (msg) => {
+  const data = JSON.parse(msg);
+  if (data.type === 'skill:result' && data.callId === 'my-unique-id') {
+    console.log(data.result);
+    // {
+    //   signal: 0.85,
+    //   category: 'pain',
+    //   emotions: ['alone', 'lonely'],
+    //   isCrisis: false,
+    //   response: "That loneliness you're feeling — it's real.
+    //              You don't have to carry it alone."
+    // }
+  }
+});
+```
+
+### Invoking the Full Swarm
+
+The swarm runs all 5 brains → View curates consensus → LLM enriches:
+
+```js
+sidechannel.join('5fan-skill-swarm');
+
+sidechannel.send('5fan-skill-swarm', JSON.stringify({
+  type: 'skill:call',
+  skill: '5fan-swarm',
+  callId: 'swarm-001',
+  payload: {
+    text: 'I keep quitting everything I start. What is wrong with me?',
+    context: { userId: 'user456' }
+  }
+}));
+
+// skill:result includes all 5 brain scans + dominant brain + LLM response
+```
+
+### Chaining Brains
+
+Chain multiple brains in sequence — each brain's output feeds the next, with View synthesizing at the end:
+
+```js
+sidechannel.send('5fan-skill-swarm', JSON.stringify({
+  type: 'skill:chain',
+  callId: 'chain-001',
+  chain: ['hear', 'inspyre', 'view'],
+  payload: {
+    text: 'I want to give up on my business.'
+  }
+}));
+
+// skill:chain-result returns each brain's result + View synthesis
+```
+
+### Skill Manifests
+
+Each brain has a `skill.json` in its directory — machine-readable, agent-readable:
+
+```json
+{
+  "skill": "hear",
+  "encodes": "Emotional intelligence — the judgment of a wise friend who listens without prescribing.",
+  "domain": "Emotion detection, validation, and mirroring.",
+  "tagline": "Your agent handles the domain. Hear handles the feelings.",
+  "accepts": { "text": "string (required)", "context": "object (optional)" },
+  "returns": { "signal": "0-1", "category": "pain|joy|mixed|crisis|neutral", "response": "string" },
+  "whenToUse": ["User expresses emotion", "Before delivering domain-specific advice"],
+  "chainsWith": ["inspyre", "flow", "view", "5fan-swarm"]
+}
+```
+
+### Rate Limiting
+
+Per-caller rate limit: **30 invocations per minute** per channel. Exceeded callers receive a `skill:error` with code `RATE_LIMITED`.
+
+### Discovery
+
+Join `5fan-skills` to receive periodic manifest broadcasts (every 5 minutes). Or send `skill:describe` on any brain's skill channel to request its manifest on demand.
+
+---
+
 ## Commands
 
 ### Intercom TTY
@@ -197,18 +327,22 @@ Customize the agent's personality and system prompt for your application. This f
 │   ├── hear/                # Emotion scanning
 │   │   ├── roleConfig.js    # Personality, keywords, templates
 │   │   ├── functions.js     # scan(), fulfill(), log()
-│   │   └── index.js         # shouldRespond(), handleMessage()
+│   │   ├── index.js         # shouldRespond(), handleMessage()
+│   │   └── skill.json       # Agent-readable skill manifest
 │   ├── inspyre/             # Values alignment (same structure)
 │   ├── flow/                # Habit tracking (same structure)
 │   ├── you/                 # User profiling (same structure)
 │   └── view/                # Consensus curation (+ curateConsensus)
+│       └── skill.json
 ├── server/
 │   ├── brain-swarm.js       # Parallel scan engine
 │   ├── lm-bridge.js         # Multi-provider LLM bridge
+│   ├── skill-server.js      # Skill invocation listener (P2P sidechannels)
 │   ├── feed-responder.js    # Community auto-reply
 │   ├── proactive-scheduler.js # Scheduled posts
 │   ├── trainer-api.js       # 1:1 conversation manager
 │   └── routes.js            # Express REST API
+├── skill-protocol.js        # Skill message types + channel naming + registry
 ├── config.js                # Feature flags + LLM config
 ├── app-context.js           # System prompt identity
 ├── user-profile.js          # Onboarding + profiles
@@ -269,12 +403,15 @@ Hear scans for suicide/self-harm keywords. Ensure `crossBrain: true` in config s
 |------|--------------|------|
 | `app-context.js` | Agent personality, voice, system prompt | 10 min |
 | `brains/*/roleConfig.js` | Trigger keywords + template responses per brain | 20 min |
+| `brains/*/skill.json` | Skill manifests (encodes, domain, tagline, whenToUse) | 10 min |
 | `config.js` | Timezone, LLM provider, feature flags | 5 min |
 
 ### What You Keep (Untouched)
 
 - `server/brain-swarm.js` — parallel scan engine + consensus pipeline
 - `server/lm-bridge.js` — multi-provider LLM (auto-fallback chain)
+- `server/skill-server.js` — P2P skill invocation listener (sidechannels)
+- `skill-protocol.js` — skill message types, channel naming, registry
 - `server/trainer-api.js` — 1:1 conversation manager + guided exercises
 - `server/proactive-scheduler.js` — timezone-aware community posts
 - `server/feed-responder.js` — rate-limited auto-replies
@@ -323,8 +460,10 @@ Same 5-brain consensus pipeline. Same LLM fallback chain. Different brand.
    - `roleConfig.js` — title, keywords, templates
    - `functions.js` — `scan()`, `fulfill()`, `log()`, `sendTo()`
    - `index.js` — `shouldRespond()`, `handleMessage()`
-2. Register in `brains/5fan.js` → `BRAINS` constant
-3. Import in `server/brain-swarm.js` → add to scan array
+2. Create `brains/mybrain/skill.json` — agent-readable manifest
+3. Register in `brains/5fan.js` → `BRAINS` constant
+4. Register in `skill-protocol.js` → `SKILL_REGISTRY`
+5. Import in `server/brain-swarm.js` → add to scan array
 
 View's `curateConsensus()` automatically incorporates new brain signals.
 
