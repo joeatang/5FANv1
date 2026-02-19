@@ -8,7 +8,11 @@ Five specialized brains analyze every message in parallel. A consensus pipeline 
 
 **[Live Demo](https://joeatang.github.io/5FAN/)** · **[Architecture](ARCHITECTURE.md)** · **[Setup Guide](SKILL.md)** · **[Fork Guide](#fork-this-for-your-brand)**
 
-**Trac Address:** `trac1wtsn8ru2ryknk36rd6glp2tfj0dawnh2gkjrg90gzqvwes65v78qmwjuzq`
+## Trac Address (for payouts)
+trac1wtsn8ru2ryknk36rd6glp2tfj0dawnh2gkjrg90gzqvwes65v78qmwjuzq
+
+## Proof of Running
+- **Live Demo:** https://joeatang.github.io/5FAN/
 
 ---
 
