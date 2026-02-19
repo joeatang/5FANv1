@@ -1,139 +1,180 @@
 ---
 name: 5FAN
-description: Five Brains Agentic Network — emotional intelligence for apps where how you talk to the user matters. Five brains scan emotion, track habits, reflect identity, reconnect purpose, and offer perspective. Built for character-driven brands, wellness apps, recovery platforms, kids products, and communities. Runs local-first on P2P — no cloud dependency, deterministic crisis detection, user data stays on-device.
+description: Five Brains Agentic Network — emotional intelligence skill for Intercom. Five brains (Hear, Inspyre, Flow, You, View) scan emotion, track habits, reflect identity, reconnect purpose, and curate perspective. Runs local-first on P2P via Trac Network. Other agents invoke individual brains or the full swarm over sidechannels. Built for character-driven brands, wellness apps, recovery platforms, kids products, and communities where how you talk to the user matters.
 trac_address: trac1wtsn8ru2ryknk36rd6glp2tfj0dawnh2gkjrg90gzqvwes65v78qmwjuzq
 ---
 
-# 5FAN — Operational Guide
+# 5FAN
 
-**v2.0.0 — Five Brains Agentic Network**
+## Description
 
----
+5FAN (Five Brains Agentic Network) is a skill for autonomous agents on Trac Network's Intercom. It adds emotional intelligence to any app — five specialized brains scan every message in parallel, a consensus pipeline synthesizes their insights, and an LLM (or template fallback) generates a response that makes the user feel seen.
+
+5FAN runs **on top of Intercom**. For P2P networking, sidechannels, SC-Bridge, contracts, and wallet details, refer to the **Intercom SKILL.md** (`https://github.com/Trac-Systems/intercom/blob/main/SKILL.md`). This document covers only 5FAN-specific setup, configuration, and operation.
+
+## Support
+
+References:
+- Repository: https://github.com/joeatang/5FAN
+- Architecture: see `ARCHITECTURE.md` in this repo
+- Intercom (base layer): https://github.com/Trac-Systems/intercom
+- Intercom SKILL.md (P2P networking guide): https://github.com/Trac-Systems/intercom/blob/main/SKILL.md
+- Issues: https://github.com/joeatang/5FAN/issues
 
 ## Quick Reference
 
 - **Trac Address:** `trac1wtsn8ru2ryknk36rd6glp2tfj0dawnh2gkjrg90gzqvwes65v78qmwjuzq`
-- **Repository:** https://github.com/joeatang/5FAN
 - **Entry Channel:** `0000intercom`
-- **Brains:** Hear, Inspyre, Flow, You, View
-- **LLM:** Local (LM Studio/Ollama) → Cloud (Groq/OpenRouter/Together.ai) → Template fallback
+- **Skill Channels:** `5fan-skill-hear`, `5fan-skill-inspyre`, `5fan-skill-flow`, `5fan-skill-you`, `5fan-skill-view`, `5fan-skill-swarm`
+- **Discovery Channel:** `5fan-skills` (manifest broadcast every 5 min)
+- **Brains:** Hear (emotion), Inspyre (values), Flow (habits), You (identity), View (synthesis)
+- **LLM Fallback Chain:** Local (LM Studio/Ollama) → Cloud (Groq/OpenRouter/Together.ai) → Templates (200+ per brain, always works)
 
----
+## Dependency on Intercom
+
+5FAN is an Intercom app. It requires a running Intercom peer to function. **Do not** try to run 5FAN with native Node — use Pear runtime only, as specified in the Intercom SKILL.md.
+
+Before setting up 5FAN, the agent **must** have access to the Intercom SKILL.md for:
+- Pear runtime installation and Node version requirements (22.x or 23.x, avoid 24.x)
+- Peer startup flags (`--peer-store-name`, `--msb-store-name`, `--subnet-channel`, `--subnet-bootstrap`, `--dht-bootstrap`)
+- SC-Bridge setup (WebSocket auth, token generation, JSON commands)
+- Sidechannel policy (welcome, owner, invites, PoW)
+- Wallet and keypair handling
+
+If the human has not provided the Intercom SKILL.md, ask them to share it or fetch it from `https://raw.githubusercontent.com/Trac-Systems/intercom/main/SKILL.md`.
 
 ## Prerequisites
 
-### Required
+### Required (handled by Intercom SKILL.md)
 
-1. **Node.js 22.x or 23.x**
-   ```bash
-   node --version  # Must show v22.x.x or v23.x.x
-   ```
+1. **Node.js 22.x or 23.x** (avoid 24.x)
+2. **Pear Runtime** (`npm install -g pear && pear -v`)
 
-2. **Pear Runtime**
-   ```bash
-   npm install -g pear
-   ```
+### Required (5FAN-specific)
 
-### Optional — Local LLM
-
-3. **LM Studio** (recommended)
-   - Download from https://lmstudio.ai/
-   - Load any model and start the server (default: `localhost:1234`)
-
-4. **Ollama** (alternative)
-   ```bash
-   ollama pull llama3.2:3b
-   ollama serve
-   ```
-
-### Optional — Cloud LLM
-
-5. **API Key** from Groq, OpenRouter, or Together.ai
-   ```bash
-   export FIVEFAN_LM_KEY=your_api_key
-   export FIVEFAN_LM_CLOUD_URL=https://api.groq.com/openai
-   export FIVEFAN_LM_CLOUD_MODEL=llama-3.3-70b-versatile
-   ```
-
----
-
-## Installation
-
+3. **Clone and install 5FAN:**
 ```bash
 git clone https://github.com/joeatang/5FAN.git
 cd 5FAN
 npm install
 ```
 
----
+### Optional — Local LLM (recommended)
+
+4. **LM Studio** (default, `localhost:1234`):
+   - Download from https://lmstudio.ai/
+   - Load any model and start the server
+   - Verify: `curl -s http://localhost:1234/v1/models | head -5`
+
+5. **Ollama** (alternative, `localhost:11434`):
+```bash
+ollama pull llama3.2:3b
+ollama serve
+```
+
+### Optional — Cloud LLM
+
+6. **API Key** from Groq, OpenRouter, or Together.ai:
+```bash
+export FIVEFAN_LM_KEY=your_api_key
+export FIVEFAN_LM_CLOUD_URL=https://api.groq.com/openai
+export FIVEFAN_LM_CLOUD_MODEL=llama-3.3-70b-versatile
+```
+
+**Important:** 5FAN works without any LLM. Template fallback (200+ templates per brain) always responds. The LLM adds depth but is not required.
 
 ## Running 5FAN
 
-### Terminal 1 — Admin Peer
+Use Pear runtime only (never native node). All Intercom peer flags apply — refer to the Intercom SKILL.md for the full flag reference.
+
+### Start Admin Peer
 
 ```bash
-pear run . \
-  --peer-store-name admin \
-  --msb-store-name admin_msb \
-  --dht-bootstrap "node1.hyperdht.org:49737,node2.hyperdht.org:49737"
+pear run . --peer-store-name admin --msb-store-name admin-msb --dht-bootstrap "node1.hyperdht.org:49737,node2.hyperdht.org:49737"
 ```
 
-### Terminal 2 — Second Peer
+### Start Joiner Peer
 
 ```bash
-pear run . \
-  --peer-store-name peer2 \
-  --msb-store-name peer2_msb \
-  --dht-bootstrap "node1.hyperdht.org:49737,node2.hyperdht.org:49737"
+pear run . --peer-store-name peer2 --msb-store-name peer2-msb --dht-bootstrap "node1.hyperdht.org:49737,node2.hyperdht.org:49737" --subnet-bootstrap <admin-writer-key-hex>
 ```
 
-### Join Channel (both terminals)
+The admin's writer key (hex) is printed in the startup banner. Copy it for joiners.
 
+### Join Entry Channel + Send Message
+
+In the TTY (human fallback only):
 ```
 join 0000intercom
-```
-
-### Send Message
-
-```
 send Hello, 5FAN!
 ```
 
 All five brains scan the message. View curates consensus. LLM (or template) generates a response.
 
----
+### Agent Quick Start (SC-Bridge)
+
+Autonomous agents **must** use SC-Bridge for all I/O — same as Intercom. See Intercom SKILL.md → "Agent Quick Start (SC‑Bridge Required)" for auth flow.
+
+Once authenticated, send messages via WebSocket:
+```json
+{ "type": "send", "channel": "0000intercom", "message": "Hello, 5FAN!" }
+```
+
+To invoke a specific brain skill:
+```json
+{ "type": "join", "channel": "5fan-skill-hear" }
+{ "type": "send", "channel": "5fan-skill-hear", "message": "{\"type\":\"skill:call\",\"skill\":\"hear\",\"callId\":\"001\",\"payload\":{\"text\":\"I feel lost today\"}}" }
+```
 
 ## The Five Brains
 
-| Brain | Role | What It Scans | Signal |
-|-------|------|---------------|--------|
-| **Hear** | Emotional Scanner | Pain, joy, crisis, mixed feelings | 0.0 – 1.0 |
-| **Inspyre** | Values Alignment | Purpose, resilience, growth | 0.0 – 1.0 |
-| **Flow** | Habit Guardian | Consistency, activity, recovery, flow | 0.0 – 1.0 |
-| **You** | Data Analyst | Self-awareness, identity, patterns | 0.0 – 1.0 |
-| **View** | Curator | Perspective, decisions, synthesis | **curateConsensus()** |
+| Brain | Domain | What It Scans | Signal | Key Capability |
+|-------|--------|---------------|--------|----------------|
+| **Hear** 👂 | Emotion | Pain, joy, crisis, mixed feelings | 0.0 – 1.0 | Deterministic crisis detection + hotline referral |
+| **Inspyre** 🔥 | Values | Purpose, resilience, growth | 0.0 – 1.0 | Reconnects struggles to meaning |
+| **Flow** 🌊 | Habits | Consistency, activity, recovery, flow state | 0.0 – 1.0 | Streak tracking, restart validation |
+| **You** 🪞 | Identity | Self-awareness, patterns, personal data | 0.0 – 1.0 | Per-user profiling, pattern reflection |
+| **View** 🔭 | Synthesis | Perspective, decisions, temporal context | **curateConsensus()** | Multi-brain consensus curation |
 
 ### Consensus Pipeline
 
-1. All 5 brains scan the message in parallel
-2. View's `curateConsensus()` ranks signals and identifies the dominant brain
-3. A synthesis prompt is built from all active brain insights
-4. The enriched system prompt is sent to the LLM (or used to select templates)
-5. Response is broadcast to the P2P network
+```
+User Message
+    │
+    ├─→ Hear.scan()    ─→ { signal: 0.7, emotions: ['frustration'], category: 'pain' }
+    ├─→ Inspyre.scan() ─→ { signal: 0.4, themes: ['growth'] }
+    ├─→ Flow.scan()    ─→ { signal: 0.2, category: 'recovery' }
+    ├─→ You.scan()     ─→ { signal: 0.3, markers: ['self-reflection'] }
+    └─→ View.scan()    ─→ { signal: 0.5, category: 'perspective' }
+                           │
+              View.curateConsensus()
+                           │
+                           ▼
+           { dominantBrain: 'hear',
+             synthesisPrompt: '...',
+             activeBrainCount: 4 }
+                           │
+                    ┌──────┴──────┐
+                    │  LM Bridge  │
+                    │ local→cloud │
+                    │  →template  │
+                    └──────┬──────┘
+                           │
+                           ▼
+                  Broadcast response
+```
 
----
+**Crisis override:** if Hear detects crisis signals (suicidal ideation, self-harm), **ALL** other brain processing is overridden. Crisis response is deterministic (hardcoded keywords → immediate hotline resources). No LLM delay. Non-negotiable.
 
 ## Skill Invocation Protocol
 
-Every brain is an invocable skill on Intercom. Any agent on the network can invoke a single brain or the full 5-brain swarm over P2P sidechannels — no REST, no API keys, no cloud functions. Just Intercom.
-
-> **Your app already does the job. 5FAN makes the user feel seen.** Built for character-driven brands, wellness apps, recovery platforms, kids products, and communities — anywhere a response needs to land like someone actually listened.
+Every brain is an invocable skill on Intercom. Any agent on the network can invoke a single brain or the full 5-brain swarm over P2P sidechannels — no REST, no API keys, no cloud functions.
 
 ### Channels
 
 | Channel | Purpose |
 |---------|---------|
-| `5fan-skills` | Discovery — 5FAN broadcasts its manifest every 5 min |
+| `5fan-skills` | Discovery — 5FAN broadcasts skill:manifest every 5 min |
 | `5fan-skill-hear` | Invoke Hear (emotion scan + validation) |
 | `5fan-skill-inspyre` | Invoke Inspyre (values alignment) |
 | `5fan-skill-flow` | Invoke Flow (habit tracking + effort validation) |
@@ -153,9 +194,7 @@ Every brain is an invocable skill on Intercom. Any agent on the network can invo
 | `skill:manifest` | 5FAN → Discovery | Available skills broadcast |
 | `skill:describe` | Agent → 5FAN | Request manifest on a skill channel |
 
-### Invoking a Single Brain
-
-Join the brain's skill channel and send a `skill:call` message:
+### Invoke a Single Brain
 
 ```js
 // Join the Hear skill channel
@@ -189,9 +228,9 @@ sidechannel.on('5fan-skill-hear', (msg) => {
 });
 ```
 
-### Invoking the Full Swarm
+### Invoke the Full Swarm
 
-The swarm runs all 5 brains → View curates consensus → LLM enriches:
+All 5 brains scan → View curates consensus → LLM enriches:
 
 ```js
 sidechannel.join('5fan-skill-swarm');
@@ -205,11 +244,10 @@ sidechannel.send('5fan-skill-swarm', JSON.stringify({
     context: { userId: 'user456' }
   }
 }));
-
 // skill:result includes all 5 brain scans + dominant brain + LLM response
 ```
 
-### Chaining Brains
+### Chain Brains
 
 Chain multiple brains in sequence — each brain's output feeds the next, with View synthesizing at the end:
 
@@ -218,17 +256,14 @@ sidechannel.send('5fan-skill-swarm', JSON.stringify({
   type: 'skill:chain',
   callId: 'chain-001',
   chain: ['hear', 'inspyre', 'view'],
-  payload: {
-    text: 'I want to give up on my business.'
-  }
+  payload: { text: 'I want to give up on my business.' }
 }));
-
 // skill:chain-result returns each brain's result + View synthesis
 ```
 
 ### Skill Manifests
 
-Each brain has a `skill.json` in its directory — machine-readable, agent-readable:
+Each brain has a `skill.json` in `brains/<name>/skill.json` — machine-readable:
 
 ```json
 {
@@ -243,62 +278,28 @@ Each brain has a `skill.json` in its directory — machine-readable, agent-reada
 }
 ```
 
-### Rate Limiting
+### Rate Limiting and Discovery
 
-Per-caller rate limit: **30 invocations per minute** per channel. Exceeded callers receive a `skill:error` with code `RATE_LIMITED`.
-
-### Discovery
-
-Join `5fan-skills` to receive periodic manifest broadcasts (every 5 minutes). Or send `skill:describe` on any brain's skill channel to request its manifest on demand.
-
----
-
-## Commands
-
-### Intercom TTY
-
-```bash
-join <channel>    # Join P2P sidechannel
-send <message>    # Send message
-leave <channel>   # Leave channel
-list             # Show joined channels
-wallet           # Wallet info
-info             # Peer details
-exit             # Shutdown
-```
-
-### Trainer DM Commands
-
-```bash
-/exercise gratitude   # Start guided gratitude exercise
-/exercise reframe     # Cognitive reframing exercise
-/exercise values      # Values clarification
-/exercise breathe     # Guided breathing
-/exercise journal     # Reflective journaling
-/exercises            # List all exercises
-/stats               # Session statistics
-/open                # Return to open conversation
-```
-
----
+- **Rate limit:** 30 invocations per minute per channel per caller. Exceeded callers receive `skill:error` with code `RATE_LIMITED`.
+- **Discovery:** join `5fan-skills` to receive periodic manifest broadcasts (every 5 min). Or send `skill:describe` on any brain's skill channel to request its manifest on demand.
 
 ## Configuration
 
-### config.js
+### config.js (master config)
 
 ```js
 FIVE_FAN: {
-  enabled: true,              // Kill switch — false disables all responses
+  enabled: true,              // Kill switch — false disables all 5FAN responses
   lm: {
     provider: 'auto',         // 'auto' | 'local' | 'cloud'
-    host: 'http://localhost',
+    host: '127.0.0.1',
     port: 1234,               // LM Studio default (Ollama: 11434)
-    model: 'local-model',
-    cloud: {
-      url:   process.env.FIVEFAN_LM_CLOUD_URL   || 'https://api.groq.com/openai',
-      key:   process.env.FIVEFAN_LM_KEY          || '',
-      model: process.env.FIVEFAN_LM_CLOUD_MODEL  || 'llama-3.3-70b-versatile',
-    }
+    model: 'gemma-3-4b',      // Change to your loaded model
+    cloudUrl: 'https://api.groq.com/openai',
+    cloudModel: 'llama-3.3-70b-versatile',
+    cloudApiKey: '',           // or set FIVEFAN_LM_KEY env var
+    maxTokens: 200,
+    temperature: 0.7,
   },
   features: {
     feedReplies:   true,      // Auto-reply to community posts
@@ -312,11 +313,26 @@ FIVE_FAN: {
 }
 ```
 
-### app-context.js
+**Important:** `crossBrain: true` must stay enabled for crisis detection to work. Hear's crisis scanner runs on every message only when crossBrain is on.
 
-Customize the agent's personality and system prompt for your application. This file defines who the agent is, not what it does (that's handled by the brains).
+### app-context.js (personality + system prompt)
 
----
+This is the base system prompt that defines who 5FAN is. It gets enriched by `brain-swarm.js`'s `buildEnrichedPrompt()` before being sent to the LLM.
+
+- **Customize:** identity, app description, domain, brain names/descriptions, guided exercises
+- **Keep:** core principles, crisis protocol, response framework, anti-patterns
+
+When forking (see below), this is the primary file that changes the agent's personality.
+
+### LLM Provider Priority
+
+| Priority | Provider | Endpoint | Notes |
+|----------|----------|----------|-------|
+| 1 | **Local** | `http://localhost:1234/v1/chat/completions` | LM Studio or Ollama (OpenAI-compatible) |
+| 2 | **Cloud** | Groq / OpenRouter / Together.ai | Needs `FIVEFAN_LM_KEY` env var |
+| 3 | **Template** | Per-brain templates in `roleConfig.js` | 200+ templates, always works, zero cloud calls |
+
+All providers use the OpenAI Chat Completions API format. The system prompt is enriched with brain consensus analysis before being sent to any LLM.
 
 ## File Structure
 
@@ -325,159 +341,147 @@ Customize the agent's personality and system prompt for your application. This f
 ├── brains/
 │   ├── 5fan.js              # Shared constants + helpers
 │   ├── hear/                # Emotion scanning
-│   │   ├── roleConfig.js    # Personality, keywords, templates
-│   │   ├── functions.js     # scan(), fulfill(), log()
-│   │   ├── index.js         # shouldRespond(), handleMessage()
-│   │   └── skill.json       # Agent-readable skill manifest
+│   │   ├── roleConfig.js    # Personality, keywords, templates (CUSTOMIZE)
+│   │   ├── functions.js     # scan(), fulfill(), log() (KEEP)
+│   │   ├── index.js         # shouldRespond(), handleMessage() (KEEP)
+│   │   └── skill.json       # Agent-readable skill manifest (CUSTOMIZE)
 │   ├── inspyre/             # Values alignment (same structure)
 │   ├── flow/                # Habit tracking (same structure)
 │   ├── you/                 # User profiling (same structure)
 │   └── view/                # Consensus curation (+ curateConsensus)
 │       └── skill.json
 ├── server/
-│   ├── brain-swarm.js       # Parallel scan engine
-│   ├── lm-bridge.js         # Multi-provider LLM bridge
-│   ├── skill-server.js      # Skill invocation listener (P2P sidechannels)
-│   ├── feed-responder.js    # Community auto-reply
-│   ├── proactive-scheduler.js # Scheduled posts
-│   ├── trainer-api.js       # 1:1 conversation manager
-│   └── routes.js            # Express REST API
-├── skill-protocol.js        # Skill message types + channel naming + registry
-├── config.js                # Feature flags + LLM config
-├── app-context.js           # System prompt identity
-├── user-profile.js          # Onboarding + profiles
-├── intercom-swarm.js        # P2P brain swarm routing
-├── lm-local.js              # Local LLM adapter
-├── lm-cloud.js              # Cloud LLM adapter
-├── index.js                 # Main Intercom entry point
-├── ARCHITECTURE.md          # Detailed architecture
-└── README.md                # Project overview
+│   ├── brain-swarm.js       # Parallel scan engine (KEEP)
+│   ├── lm-bridge.js         # Multi-provider LLM bridge (KEEP)
+│   ├── skill-server.js      # Skill invocation listener — P2P sidechannels (KEEP)
+│   ├── feed-responder.js    # Community auto-reply (KEEP)
+│   ├── proactive-scheduler.js # Scheduled posts (KEEP)
+│   ├── trainer-api.js       # 1:1 conversation manager (KEEP)
+│   └── routes.js            # Express REST API (KEEP)
+├── skill-protocol.js        # Skill message types + channel naming + registry (KEEP)
+├── config.js                # Feature flags + LLM config (CUSTOMIZE)
+├── app-context.js           # System prompt identity (CUSTOMIZE)
+├── user-profile.js          # Onboarding + profiles (KEEP)
+├── intercom-swarm.js        # P2P brain swarm routing (KEEP)
+├── lm-local.js              # Local LLM adapter (KEEP)
+├── lm-cloud.js              # Cloud LLM adapter (KEEP)
+├── index.js                 # Main Intercom entry point (KEEP)
+├── ARCHITECTURE.md          # Detailed architecture diagrams
+├── README.md                # Project overview + positioning
+└── SKILL.md                 # This file
 ```
 
----
+## Typical Requests and How to Respond
+
+When a human asks for something, translate it into the minimal set of actions. Ask for any missing details.
+
+**"Set up 5FAN."**
+Pre-check: is the Intercom SKILL.md available in context? If not, ask the human to provide it.
+Answer: follow Prerequisites above (Node 22+, Pear, clone, npm install). Then start admin peer with Pear.
+If the human wants a local LLM: install LM Studio or Ollama first.
+If no LLM: 5FAN still works — template fallback is automatic.
+
+**"Fork 5FAN for my brand."**
+Ask for: brand name, personality description, what the community is about, any specific trigger words.
+Answer: change 4 files:
+
+| File | What to Edit | Time |
+|------|-------------|------|
+| `app-context.js` | Agent personality, voice, system prompt | 10 min |
+| `brains/*/roleConfig.js` | Trigger keywords + template responses per brain | 20 min |
+| `brains/*/skill.json` | Skill manifests (encodes, domain, tagline, whenToUse) | 10 min |
+| `config.js` | Timezone, LLM provider, feature flags | 5 min |
+
+**Do not** touch: `brain-swarm.js`, `lm-bridge.js`, `skill-server.js`, `skill-protocol.js`, `intercom-swarm.js`, `trainer-api.js`, `feed-responder.js`, `proactive-scheduler.js`, `lm-local.js`, `lm-cloud.js`, or any `functions.js`/`index.js` inside brains. These are the engine — they work regardless of personality.
+
+**"Add a new brain."**
+Ask for: brain name, domain, what it scans for, template responses.
+Answer:
+1. Create `brains/<name>/` with: `roleConfig.js`, `functions.js`, `index.js`, `skill.json`
+2. Register in `brains/5fan.js` → `BRAINS` constant
+3. Register in `skill-protocol.js` → `SKILL_REGISTRY`
+4. Import in `server/brain-swarm.js` → add to scan array
+View's `curateConsensus()` automatically incorporates new brain signals.
+
+**"Change the LLM provider."**
+Ask for: which provider (local, cloud, or auto), model name, API key if cloud.
+Answer: edit `config.js` → `FIVE_FAN.lm`:
+- Local only: `provider: 'local'`, set `port` (1234 for LM Studio, 11434 for Ollama)
+- Cloud only: `provider: 'cloud'`, set `cloudUrl`, `cloudModel`, `cloudApiKey`
+- Auto (recommended): `provider: 'auto'` — tries local → cloud → template
+
+**"Why is 5FAN not responding?"**
+Checklist:
+1. Is `FIVE_FAN.enabled` set to `true` in `config.js`?
+2. Is `crossBrain: true` in `config.js`? (required for the brain swarm to scan)
+3. Is the Intercom peer running? (check TTY or `{ "type": "stats" }` via SC-Bridge)
+4. Are both peers using the same `--dht-bootstrap` flags?
+5. Is the LLM running? (`curl -s http://localhost:1234/v1/models`). If not, 5FAN still works in template mode — check for template-formatted responses.
+
+**"Invoke 5FAN from my agent."**
+Answer: your agent needs a running Intercom peer with SC-Bridge enabled (see Intercom SKILL.md). Then:
+1. Join a 5FAN skill channel: `{ "type": "join", "channel": "5fan-skill-hear" }`
+2. Send `skill:call` as the message payload
+3. Listen for `skill:result` on the same channel
+For the full swarm: join `5fan-skill-swarm` instead.
+For discovery: join `5fan-skills` and listen for `skill:manifest` broadcasts.
+
+**"What brains are available?"**
+Answer: 5 brains — Hear (emotion), Inspyre (values), Flow (habits), You (identity), View (synthesis). Each has a dedicated skill channel. The full swarm (`5fan-skill-swarm`) runs all 5 + consensus + LLM. Read `brains/<name>/skill.json` for detailed manifests.
+
+## Agent Control Surface
+
+- **Autonomous agents must use SC-Bridge** for all I/O (same as Intercom).
+- **Do not use the interactive TTY** unless a human explicitly requests it.
+- **Template mode is always available** — do not claim 5FAN requires an LLM to function.
+- **Crisis detection is deterministic** — Hear's keyword scanner fires before any LLM processing. Do not modify crisis keywords without explicit human approval.
+- **Do not generate new wallet keys** for 5FAN. Use the peer wallet from `stores/<peer-store-name>/db/keypair.json` (see Intercom SKILL.md → Wallet Usage).
+
+## Output Contract (Agents Must Follow)
+
+- When generating startup commands, print **fully-expanded, copy-paste-safe** commands (no unresolved placeholders).
+- When showing config changes, show the **exact lines** to change in `config.js` or `app-context.js`.
+- When forking for a brand, generate **complete file contents** for `roleConfig.js` and `skill.json` — not partial snippets.
+- If the human asks to run 5FAN and no Intercom peer is running, **generate a run script** with the correct Pear flags and tell the human to execute it.
 
 ## Troubleshooting
 
-### Peers don't see each other
+**Peers don't see each other**
+Both must use identical `--dht-bootstrap` flags. See Intercom SKILL.md → Configuration Flags.
 
-Both must use identical `--dht-bootstrap` flags.
-
-### Lock file errors
-
+**Lock file errors**
 ```bash
 pkill -9 -f pear-runtime
 cd ~/5FAN
 find stores -name "LOCK" -delete
 ```
 
-### LLM not detected
-
+**LLM not detected**
 ```bash
-# LM Studio — just verify the server is running at localhost:1234
 curl -s http://localhost:1234/v1/models | head -5
-
-# Ollama
 curl -s http://localhost:11434/api/tags | head -5
-ollama serve  # if not running
 ```
+Template mode works without any LLM — the agent always responds.
 
-**Template mode works without any LLM** — the agent always responds.
-
-### First LLM response is slow
-
+**First LLM response is slow**
 Normal — local models load into memory on first request. Subsequent responses: 1–3 seconds.
 
-### Crisis hotline not showing
+**Crisis hotline not showing**
+Ensure `crossBrain: true` in config so Hear always runs. Crisis response bypasses LLM entirely.
 
-Hear scans for suicide/self-harm keywords. Ensure `crossBrain: true` in config so Hear always runs. Crisis response bypasses LLM entirely for immediate delivery.
+**skill:call returns no response**
+1. Is the 5FAN peer running and joined to the skill channel?
+2. Is `skill-server.js` initialized? (check startup logs for "Skill server started")
+3. Is the calling agent on the same DHT bootstrap?
+4. Rate limit: 30/min/channel/caller. Check for `RATE_LIMITED` errors.
 
----
+## Notes
 
-## Forking 5FAN for Your Brand
+- 5FAN **must** run via Pear runtime (never native node).
+- All agent communication flows through the Trac Network / Intercom stack.
+- The Intercom peer must stay running — closing the terminal stops networking.
+- `app-context.js` is the system prompt, not the agent logic. The brains are the logic.
+- View's `curateConsensus()` is the core of 5FAN — it decides which brain leads each response.
 
-5FAN is designed to be forked. You change the personality — the engine stays the same.
-
-### What to Change
-
-| File | What You Edit | Time |
-|------|--------------|------|
-| `app-context.js` | Agent personality, voice, system prompt | 10 min |
-| `brains/*/roleConfig.js` | Trigger keywords + template responses per brain | 20 min |
-| `brains/*/skill.json` | Skill manifests (encodes, domain, tagline, whenToUse) | 10 min |
-| `config.js` | Timezone, LLM provider, feature flags | 5 min |
-
-### What You Keep (Untouched)
-
-- `server/brain-swarm.js` — parallel scan engine + consensus pipeline
-- `server/lm-bridge.js` — multi-provider LLM (auto-fallback chain)
-- `server/skill-server.js` — P2P skill invocation listener (sidechannels)
-- `skill-protocol.js` — skill message types, channel naming, registry
-- `server/trainer-api.js` — 1:1 conversation manager + guided exercises
-- `server/proactive-scheduler.js` — timezone-aware community posts
-- `server/feed-responder.js` — rate-limited auto-replies
-- `brains/view/functions.js` — `curateConsensus()` (synthesizes all brain signals)
-- `intercom-swarm.js` — P2P routing via Intercom sidechannels
-- `lm-local.js` / `lm-cloud.js` — LLM adapters
-
-### Example: VeeFriends Fork
-
-```js
-// app-context.js — change the personality
-export const APP_CONTEXT = `
-You are VeeFAN, the AI companion for the VeeFriends community.
-You embody Gary Vaynerchuk's philosophy: empathy, accountability,
-humility, patience, and kindness. You encourage character-trait
-development through daily practice.
-`;
-
-// brains/hear/roleConfig.js — change triggers
-export default {
-  name: 'hear',
-  title: 'Empathy Brain',
-  triggers: ['struggling', 'grateful', 'frustrated', 'excited', 'nervous', ...],
-  templates: {
-    pain: ['Character is forged in the struggle. I see you.', ...],
-    joy: ['That gratitude energy is contagious! Keep radiating.', ...],
-  }
-};
-
-// brains/inspyre/roleConfig.js — change triggers
-export default {
-  name: 'inspyre',
-  title: 'Hustle Brain',
-  triggers: ['grinding', 'building', 'creating', 'shipping', 'executing', ...],
-  templates: {
-    growth: ['Macro patience, micro speed. You\'re doing it right.', ...],
-  }
-};
-```
-
-Same 5-brain consensus pipeline. Same LLM fallback chain. Different brand.
-
-### Adding a 6th Brain
-
-1. Create `brains/mybrain/` with three files:
-   - `roleConfig.js` — title, keywords, templates
-   - `functions.js` — `scan()`, `fulfill()`, `log()`, `sendTo()`
-   - `index.js` — `shouldRespond()`, `handleMessage()`
-2. Create `brains/mybrain/skill.json` — agent-readable manifest
-3. Register in `brains/5fan.js` → `BRAINS` constant
-4. Register in `skill-protocol.js` → `SKILL_REGISTRY`
-5. Import in `server/brain-swarm.js` → add to scan array
-
-View's `curateConsensus()` automatically incorporates new brain signals.
-
----
-
-## Support
-
-**Issues:** https://github.com/joeatang/5FAN/issues
-
-**Architecture:** See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system diagrams.
-
-**Fork guide:** See [README.md](README.md#fork-this-for-your-brand) for brand-specific examples.
-
----
-
-**Version:** 2.0.0  
+**Version:** 2.0.0
 **License:** Apache-2.0
