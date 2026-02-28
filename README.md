@@ -1,12 +1,10 @@
-# 5FAN — Five Brains Agentic Network
+# 5FAN — Emotional Intelligence as P2P Infrastructure
 
-**A multi-brain AI agent built on [Trac Network's Intercom](https://github.com/Trac-Systems/intercom).**
+**41 callable skills for any app that talks to humans.** Emotion scan, crisis detection, coaching, community engagement, wellness scoring — all over P2P sidechannels on [Trac Network's Intercom](https://github.com/Trac-Systems/intercom). No REST endpoints, no API keys, no cloud dependency.
 
-Five specialized brains analyze every message in parallel. A consensus pipeline synthesizes their insights into a single, informed response — powered by local or cloud LLMs with graceful template fallback. Other agents on Intercom can invoke any brain as a skill over P2P sidechannels — no REST, no API keys, no cloud functions.
+Your app already does the job. 5FAN makes it *feel* right — so notifications land with the right tone, crisis signals never get missed, and responses sound like someone who actually listened.
 
-> **Your app already does the job. 5FAN makes the user feel seen.** Five brains that scan emotion, track habits, reflect identity, reconnect purpose, and offer perspective — so your product's responses land like a real conversation, not a chatbot reply.
-
-**[Live Demo](https://joeatang.github.io/5FAN/)** · **[Architecture](ARCHITECTURE.md)** · **[Setup Guide](SKILL.md)** · **[Fork Guide](#fork-this-for-your-brand)**
+**[Live Demo](https://joeatang.github.io/5FAN/)** · **[Architecture](ARCHITECTURE.md)** · **[Skill Guide](SKILL.md)** · **[Fork Guide](#fork-this-for-your-brand)**
 
 ## Trac Address (for payouts)
 trac1wtsn8ru2ryknk36rd6glp2tfj0dawnh2gkjrg90gzqvwes65v78qmwjuzq
@@ -18,58 +16,89 @@ trac1wtsn8ru2ryknk36rd6glp2tfj0dawnh2gkjrg90gzqvwes65v78qmwjuzq
 
 ---
 
-## Who Is This For
+## What Your App Gets
 
-5FAN is built for developers and teams making products where **how you talk to the user matters as much as what you do for them.** If your app has moments where a person shares something personal, hits a milestone, struggles, celebrates, or goes quiet — 5FAN makes sure your product responds like it actually noticed.
+Call any skill over WebSocket or P2P sidechannel. Get a structured result back in milliseconds.
 
-### The apps that need this most
+```json
+{ "type": "skill-call", "skill": "emotion-scan", "input": { "text": "I feel lost" } }
+→ { "type": "skill-result", "result": { "ok": true, "signal": 0.82, "emotions": ["sadness", "confusion"], "category": "pain" }, "ms": 12 }
+```
 
-| If You're Building... | The Problem Without 5FAN | Why an LLM Alone Isn't Enough |
+### Integration Examples
+
+| When Your App Needs To... | Call This Skill | What You Get Back |
 |---|---|---|
-| **Character-driven brands** (VeeFriends, Disney, IP universes) | 283 characters that each need a distinct, consistent personality | An LLM drifts out of character. 5FAN's brain architecture holds it — same keywords, same scan patterns, same voice, every time. Code doesn't drift. |
-| **Recovery & crisis-adjacent apps** (sobriety, eating disorders, mental health) | A user types "I want to use again" — you MUST catch it, every time | LLMs are probabilistic. They might catch it. 5FAN's crisis detection is deterministic — hardcoded keyword scanning fires before the LLM sees the message. No misses. |
-| **Kids & youth platforms** (education, youth communities, family apps) | Sending a child's emotional data to a cloud LLM is a legal minefield (COPPA, GDPR-K) | 5FAN runs local-first. Template fallback means zero cloud calls. User data never leaves the device. |
-| **Fitness, wellness & streak-based apps** (Peloton, Calm, Strava, journaling) | Your app knows it's day 14 but says "Don't break your streak!" — that's guilt, not emotional intelligence | 5FAN's Flow brain knows restarts are harder than streaks. You brain tracks patterns across time. Hear detects burnout. The response lands. |
-| **Creator & fan communities** (Discord bots, Patreon, community platforms) | A generic chatbot in a 50K-member community feels hollow | 5FAN scans every message but only triggers the LLM when a brain detects something worth responding to. Most messages get fast templates. The important ones get depth. Scales affordably. |
-| **Corporate wellness** (employee engagement, HR platforms) | Employee emotional data going to OpenAI? Legal and HR shut it down | 5FAN runs on-premise or P2P. Data stays internal. No third-party processing of sensitive employee conversations. |
+| Read the room before sending a notification | `emotion-scan` | Signal strength (0–1), detected emotions, category |
+| Catch "I want to give up" before the LLM sees it | `crisis-detect` | Crisis type, severity, hotline resources — deterministic, zero misses |
+| Adjust reply tone to match the user's mood | `tone-match` | Suggested tone, energy level, formality score |
+| Know if a user is burning out or in flow | `wellness-score` | Composite score across emotional, habit, and identity dimensions |
+| Celebrate a milestone the user didn't announce | `milestone-detect` | Streak count, milestone type, suggested acknowledgment |
+| Generate a coaching nudge at the right moment | `nudge-engine` | Context-aware nudge text, trigger reason, urgency |
+| Help a user reframe a negative thought | `reframe` | Original thought, cognitive distortion, reframed perspective |
+| Turn raw emotion into a concrete action | `micro-move` | 30-second action matched to the detected emotion |
 
-### Why not just prompt an LLM to be empathetic?
-
-You can. And for simple use cases, you should. But 5FAN exists for the three problems a prompted LLM can't solve:
-
-| Problem | What Happens With Just an LLM | What 5FAN Does |
-|---|---|---|
-| **Consistency** | The model drifts — different tone, different character, different depth per response | Five hardcoded brain scanners fire the same way on every message. The analysis is deterministic. The LLM only handles the talking, not the thinking. |
-| **Safety** | The model *might* catch a crisis signal. Might not. It's probabilistic. | Hear's keyword scanner catches crisis signals with 100% recall — before the LLM processes anything. Deterministic. Non-negotiable. |
-| **Data control** | Every message goes to someone else's server | 5FAN runs local-first on P2P. 200+ template responses per brain work with zero cloud calls. User data stays on-device. |
-
-If your product doesn't need consistency, safety, or data control — use an LLM with a good prompt. If you need even one of these three — that's what 5FAN is for.
+Every skill is deterministic first (keyword scanning, rule-based analysis), LLM-enriched second (local → cloud → template fallback). Crisis detection is **always deterministic** — no probabilistic misses.
 
 ---
 
-## How It Works
+## 41 Skills — Full Catalog
 
-The brain swarm architecture is domain-agnostic. The 5 brains (Hear, Inspyre, Flow, You, View) are a *template* — swap the keywords, templates, and personality and you have a completely different agent for a completely different community. The consensus pipeline, LLM bridge, trainer, scheduler, and feed responder all work regardless of what the brains are scanning for.
+| Category | Count | Skills | What They Do |
+|----------|-------|--------|--------------|
+| **EQ Engine** | 9 | emotion-scan, emotion-family, emotion-blend, emotion-timeline, crisis-detect, alias-match, reframe, micro-move, desire-bridge | Deterministic emotional intelligence — scan, classify, reframe, and act on emotion |
+| **Compass** | 5 | compass-locate, compass-interpret, compass-point, compass-practice, shift-navigator | Purpose and values navigation — find where you are, where you're going, what to practice |
+| **Community** | 5 | feed-reply, proactive-post, community-pulse, hi-note-compose, social-caption | Community engagement — auto-reply, scheduled posts, sentiment pulse |
+| **AI Coach** | 10 | tone-match, content-elevate, gym-facilitator, coach-chat, nudge-engine, milestone-detect, memory-context, journal-prompt, session-summary, wellness-score | 1:1 coaching — guided sessions, contextual nudges, milestone tracking, wellness scoring |
+| **Internal** | 6 | earn-calculator, tier-gate, hi5-claim-check, quality-score, anti-bot, vault-query | Stay Hi Trac integration — point economy, tier access, anti-abuse |
+| **Core Brains** | 6 | hear, inspyre, flow, you, view, swarm | 5-brain consensus engine + full swarm invocation |
 
-The five brains are also invocable skills over P2P. Any agent on Intercom can call Hear to scan emotions, Inspyre to find purpose, Flow to track habits, You to reflect identity, or View to synthesize all five — over sidechannels, no API keys, no cloud.
+All 41 skills are registered in `skill-protocol.js` and dispatched via `skill-dispatch.js`. Rate limited to 30 calls/min/caller.
+
+### Invocation (P2P Sidechannel)
+
+```json
+{ "type": "skill:call", "skill": "compass-locate", "input": { "text": "I don't know what I want" } }
+→ { "type": "skill:result", ... }
+```
+
+### Invocation (WebSocket / SC-Bridge)
+
+```json
+{ "type": "skill-call", "skill": "wellness-score", "input": { "text": "I've been off for days" } }
+→ { "type": "skill-result", "skill": "wellness-score", "result": { "ok": true, ... }, "ms": 18 }
+```
 
 ---
 
-## What Changed in v2
+## Why Not Just Prompt an LLM?
 
-| | v1 | v2 |
+For simple cases, you should. But 5FAN solves three problems a prompted LLM can't:
+
+| Problem | LLM Alone | 5FAN |
 |---|---|---|
-| **Analysis** | Random voice selection | 5 brains scan in parallel |
-| **Synthesis** | Single voice template | View brain curates consensus |
-| **LLM** | Ollama-only | Local → Cloud → Template auto-fallback |
-| **Conversation** | Broadcast only | 1:1 Trainer (open + guided exercises) |
-| **Community** | Passive | Proactive scheduled posts + feed auto-reply |
-| **Profiling** | None | Per-user word-frequency + onboarding |
-| **Config** | Hardcoded | Feature flags + kill switch |
+| **Consistency** | Drifts — different tone, depth, character every time | Deterministic brain scanners fire identically on every message. The LLM only handles talking, not thinking. |
+| **Safety** | *Might* catch a crisis signal. Probabilistic. | `crisis-detect` catches suicide/self-harm keywords with 100% recall. Fires before the LLM. Non-negotiable. |
+| **Data control** | Every message goes to someone else's server | Runs local-first on P2P. 200+ template responses work with zero cloud calls. Data stays on-device. |
 
 ---
 
-## The Five Brains
+## Who Needs This
+
+| If You're Building... | The Problem Without 5FAN |
+|---|---|
+| **Recovery & crisis apps** | "I want to use again" MUST be caught every time. LLMs are probabilistic. 5FAN is deterministic. |
+| **Kids & youth platforms** | Sending a child's emotional data to a cloud LLM is a COPPA/GDPR-K minefield. 5FAN runs local-first. |
+| **Fitness & wellness apps** | Your app knows it's day 14 but says "Don't break your streak!" — that's guilt, not intelligence. 5FAN knows restarts are harder than streaks. |
+| **Character-driven brands** | 283 characters need distinct voices. LLMs drift. 5FAN's brain architecture locks personality in code. |
+| **Creator & fan communities** | A chatbot in a 50K community feels hollow. 5FAN scans every message, only triggers depth when it matters. |
+| **Corporate wellness** | Employee emotional data going to OpenAI? Legal shuts it down. 5FAN runs on-premise or P2P. |
+
+---
+
+## How It Works — The Five Brains
+
+Under the hood, 5FAN runs five specialized brains in parallel on every message. A consensus engine synthesizes their signals into one informed response.
 
 | Brain | Domain | Scans For | Signal |
 |-------|--------|-----------|--------|
@@ -79,13 +108,9 @@ The five brains are also invocable skills over P2P. Any agent on Intercom can ca
 | **You** | Identity | Self-awareness, patterns, personal data | 0.0 – 1.0 |
 | **View** | Synthesis | Perspective, decisions, temporal context | **+ curateConsensus()** |
 
-Every message flows through all five brains simultaneously. View's `curateConsensus()` ranks signals, identifies the dominant brain, and builds a synthesis prompt that enriches the LLM system message.
+View's `curateConsensus()` ranks signals, identifies the dominant brain, and builds a synthesis prompt that enriches the LLM system message. **Crisis detection** bypasses all of this — Hear's keyword scanner fires immediately and provides hotline resources with no LLM delay.
 
-**Crisis detection:** Hear scans for suicide/self-harm keywords and immediately provides hotline resources — no LLM delay.
-
----
-
-## Consensus Pipeline
+### Consensus Pipeline
 
 ```
 User message
@@ -113,106 +138,19 @@ User message
                         Final response
 ```
 
----
+### P2P Skill Channels
 
-## Skill Layer — Five Brains as Infrastructure
+Any agent on Intercom can invoke a single brain or the full swarm over sidechannels:
 
-Every brain is an invocable skill on Intercom. Any peer on the network can call a single brain or the full swarm — no REST, no API keys, no cloud. Just P2P sidechannels.
-
-### How It Works
-
-```
-External Agent                              5FAN
-     │                                        │
-     ├─ join "5fan-skill-hear" ────────────────┤
-     │                                        │
-     ├─ skill:call { text: "I feel lost" } ───▶│ Hear.scan() + Hear.fulfill()
-     │                                        │
-     │◀── skill:result { signal: 0.8,         │
-     │     category: "pain",                  │
-     │     response: "That's real. I hear you."│
-     │     } ─────────────────────────────────┤
-     │                                        │
-     ├─ join "5fan-skill-swarm" ──────────────┤
-     │                                        │
-     ├─ skill:call { text: "Should I quit?" }─▶│ All 5 brains → View curates → LLM
-     │                                        │
-     │◀── skill:result { dominant: "inspyre", │
-     │     signal: 0.9,                       │
-     │     response: "Something in you refuses│
-     │     to quit..." }                      │
-     └────────────────────────────────────────┘
-```
-
-### Channels
-
-| Channel | Purpose |
+| Channel | What It Does |
 |---------|---------|
-| `5fan-skills` | Discovery — 5FAN broadcasts its skill manifest here |
-| `5fan-skill-hear` | Invoke Hear brain (emotion scan) |
-| `5fan-skill-inspyre` | Invoke Inspyre brain (values alignment) |
-| `5fan-skill-flow` | Invoke Flow brain (habit tracking) |
-| `5fan-skill-you` | Invoke You brain (identity reflection) |
-| `5fan-skill-view` | Invoke View brain (perspective synthesis) |
-| `5fan-skill-swarm` | Invoke all 5 brains + View consensus + LLM |
-
-### Message Types
-
-| Type | Direction | Purpose |
-|------|-----------|---------|
-| `skill:call` | Agent → 5FAN | Invoke a brain skill |
-| `skill:result` | 5FAN → Agent | Brain scan result + response |
-| `skill:error` | 5FAN → Agent | Invocation error |
-| `skill:chain` | Agent → 5FAN | Chain multiple brains in sequence |
-| `skill:chain-result` | 5FAN → Agent | Chained results with synthesis |
-| `skill:manifest` | 5FAN → Discovery | Available skills broadcast |
-| `skill:describe` | Agent → 5FAN | Request manifest on a skill channel |
-
-### Why This Matters
-
-Your app already does the job. But when a user shares something personal, hits a wall, celebrates a milestone, or goes quiet — does your product notice? Does it respond like it actually heard them?
-
-That's what the skill layer does. Any app on the network can call a brain in the moment it matters:
-- Call **Hear** before delivering bad news — it reads emotion and adjusts tone so the message lands
-- Call **Inspyre** when someone wants to quit — it reconnects them to why they started
-- Call **Flow** to validate consistency — it celebrates showing up, not just outcomes
-- Call **You** to reflect identity — "You've mentioned gratitude 3x this week. That's your thing."
-- Call **View** to synthesize it all — or call the **Swarm** for the full 5-brain consensus + LLM
-
-Each brain has a `skill.json` manifest in its directory — machine-readable, agent-readable, ready for integration.
-
----
-
-## 41-Skill P2P System
-
-Beyond the 5 core brains, 5FAN exposes **41 discrete skills** (35 callable + 6 internal) — each invocable over P2P sidechannels or via WebSocket `skill-call` messages. No REST, no API keys.
-
-### Skill Categories
-
-| Category | Skills | What They Do |
-|----------|--------|--------------|
-| **EQ Engine** (9) | emotion-scan, emotion-family, emotion-blend, emotion-timeline, crisis-detect, alias-match, reframe, micro-move, desire-bridge | Deterministic emotional intelligence — scan, classify, reframe, and act on emotion |
-| **Compass** (5) | compass-locate, compass-interpret, compass-point, compass-practice, shift-navigator | Purpose and values navigation — find where you are, where you're going, what to practice |
-| **Community** (5) | feed-reply, proactive-post, community-pulse, hi-note-compose, social-caption | Community engagement — auto-reply, scheduled posts, sentiment pulse |
-| **AI Coach** (10) | tone-match, content-elevate, gym-facilitator, coach-chat, nudge-engine, milestone-detect, memory-context, journal-prompt, session-summary, wellness-score | 1:1 coaching — guided sessions, contextual nudges, milestone tracking, wellness scoring |
-| **Internal** (6) | earn-calculator, tier-gate, hi5-claim-check, quality-score, anti-bot, vault-query | Stay Hi Trac integration — point economy, tier access, anti-abuse |
-| **Core Brains** (6) | hear, inspyre, flow, you, view, swarm | The 5-brain consensus engine + full swarm invocation |
-
-### Invocation (WebSocket)
-
-```json
-{ "type": "skill-call", "skill": "emotion-scan", "input": { "text": "I feel lost" } }
-→ { "type": "skill-result", "skill": "emotion-scan", "result": { "ok": true, ... }, "ms": 12 }
-```
-
-### Invocation (P2P Sidechannel)
-
-```json
-{ "type": "skill:call", "skill": "compass-locate", "input": { "text": "I don't know what I want" } }
-→ { "type": "skill:result", ... }
-```
-
-All 41 skills are registered in `skill-protocol.js` and dispatched via `skill-dispatch.js`. Rate limited to 30 calls/min/caller.
+| `5fan-skill-hear` | Invoke Hear (emotion scan) |
+| `5fan-skill-inspyre` | Invoke Inspyre (values alignment) |
+| `5fan-skill-flow` | Invoke Flow (habit tracking) |
+| `5fan-skill-you` | Invoke You (identity reflection) |
+| `5fan-skill-view` | Invoke View (perspective synthesis) |
+| `5fan-skill-swarm` | All 5 brains → consensus → LLM |
+| `5fan-skills` | Discovery — manifest broadcast every 5 min |
 
 ---
 
